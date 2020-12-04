@@ -124,25 +124,83 @@ class CardGrid extends React.Component {
                               5);
   }
 
+
   render() {
-    let elements = Array();
     let rowScores = this.getRowScores();
     let columnScores = this.getColumnScores();
-    for (let i = 0 ; i < 25 ; i++) {
-      elements.push(this.renderCard(i));
-      if (i % 5 === 4) {
-        const rowInd = Math.floor(i / 5);
-        elements.push(<span align="center">{"  " + rowScores[rowInd]}</span>);
-        elements.push(<br/>);
+
+    let topRowElements = Array();
+    let wholeRows = Array();
+    // first row is next card and then the column scores.
+    topRowElements.push((<td>
+                          <Card 
+                              rank={this.props.nextCard.rank}
+                              suit={this.props.nextCard.suit}
+                          />
+                        </td>));
+    for(const colScore of columnScores) {
+      topRowElements.push(<td><span align="center">{colScore}</span></td>);
+    }
+    topRowElements.push(<td>
+                          <span
+                            align="center"
+                            style={{'font-weight': 'bold',
+                                    'font-size': 24}}
+                          >
+                            {columnScores.reduce((x,y)=>x+y, 0)}
+                          </span>
+                        </td>);
+    
+    wholeRows.push(React.createElement("tr", null, ...topRowElements));
+
+    // for other rows, it is the card layout with row score in first column.
+    for (let row = 0 ; row < 5; row++) {
+      let rowElements = Array();
+      rowElements.push(<td><span align="center">{rowScores[row]}</span></td>);
+      for(let cardIndex = 0 ; cardIndex < 5; cardIndex++) {
+        const ind = cardIndex + 5*row;
+        rowElements.push(<td>{this.renderCard(ind)}</td>);
       }
+      wholeRows.push(React.createElement("tr", null, ...rowElements));
     }
 
-    for (let i = 0 ; i < 5 ; i++) {
-      elements.push(<span align="center">{"  " + columnScores[i] + "    "}</span>);
-    }
+    wholeRows.push(<tr><td>
+      <span
+        align="center"
+        style={{'font-weight': 'bold',
+                'font-size': 24}}
+      >
+        {rowScores.reduce((x,y)=>x+y, 0)}
+      </span>
+    </td></tr>);
 
-    return React.createElement("div", null, ...elements);
+    return React.createElement("table", null, ...wholeRows);
   }
+
+  // render() {
+  //   let elements = Array();
+  //   let rowScores = this.getRowScores();
+  //   let columnScores = this.getColumnScores();
+  //   for (let i = 0 ; i < 25 ; i++) {
+  //     elements.push(this.renderCard(i));
+  //     if (i % 5 === 4) {
+  //       const rowInd = Math.floor(i / 5);
+  //       elements.push(<span align="center">{"  " + rowScores[rowInd]}</span>);
+  //       elements.push(<br/>);
+  //     }
+  //   }
+
+  //   for (let i = 0 ; i < 5 ; i++) {
+  //     elements.push(<span align="center">{"  " + columnScores[i] + "    "}</span>);
+  //   }
+
+  //   const grid = React.createElement("div", null, ...elements);
+  //   const nextCard = (<Card 
+  //                       rank={this.props.nextCard.rank}
+  //                       suit={this.props.nextCard.suit}
+  //                     />);
+  //   return React.createElement("div", null, [nextCard, <br/>, grid]);
+  // }
 }
 
 
@@ -182,12 +240,8 @@ class CribbageGame extends React.Component {
     const currentCard = this.state.deck[0];
     return (
       <div>
-        <Card
-            rank={currentCard.rank}
-            suit={currentCard.suit}
-        />
-        <br/>
         <CardGrid
+          nextCard={currentCard}
           cardLayout={this.state.cardLayout}
           clickHandler={(i) => this.handleGridClick(i)}
         />
