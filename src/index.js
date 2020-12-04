@@ -21,7 +21,10 @@ function convertCardToUrl(rank, suit) {
 class Card extends React.Component {
   render() {
     let location;
-    if (this.props.rank && this.props.suit) {
+    if (this.props.showBack) {
+      location = "cards/astronaut.svg";
+    }
+    else if (this.props.rank && this.props.suit) {
       location = convertCardToUrl(this.props.rank, this.props.suit);
       
     }
@@ -47,7 +50,7 @@ class Card extends React.Component {
 
 function makeDeck() {
   const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
-  const ranks = ['2', '3', '4', '5', '6', '7', '9', '10',
+  const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
                   'jack', 'queen', 'king', 'ace'];
   let ans = Array();
   for (const s of suits) {
@@ -128,16 +131,29 @@ class CardGrid extends React.Component {
   render() {
     let rowScores = this.getRowScores();
     let columnScores = this.getColumnScores();
+    const columnScoreTotal = columnScores.reduce((x,y)=>x+y, 0);
+    const rowScoreTotal = rowScores.reduce((x,y)=>x+y, 0);
+
 
     let topRowElements = Array();
     let wholeRows = Array();
     // first row is next card and then the column scores.
-    topRowElements.push((<td>
-                          <Card 
-                              rank={this.props.nextCard.rank}
-                              suit={this.props.nextCard.suit}
-                          />
-                        </td>));
+    if(this.props.nextCard) {
+      topRowElements.push((<td>
+                            <Card 
+                                rank={this.props.nextCard.rank}
+                                suit={this.props.nextCard.suit}
+                            />
+                          </td>));
+    }
+    else {
+      topRowElements.push((<td>
+        <Deck 
+            isEmpty={false}
+            clickHandler={() => {this.props.resetCallback(rowScoreTotal, columnScoreTotal)}}
+        />
+      </td>));
+    }
     for(const colScore of columnScores) {
       topRowElements.push(<td><span align="center">{colScore}</span></td>);
     }
@@ -147,7 +163,7 @@ class CardGrid extends React.Component {
                             style={{'font-weight': 'bold',
                                     'font-size': 24}}
                           >
-                            {columnScores.reduce((x,y)=>x+y, 0)}
+                            {columnScoreTotal}
                           </span>
                         </td>);
     
@@ -170,37 +186,12 @@ class CardGrid extends React.Component {
         style={{'font-weight': 'bold',
                 'font-size': 24}}
       >
-        {rowScores.reduce((x,y)=>x+y, 0)}
+        {rowScoreTotal}
       </span>
     </td></tr>);
 
     return React.createElement("table", null, ...wholeRows);
   }
-
-  // render() {
-  //   let elements = Array();
-  //   let rowScores = this.getRowScores();
-  //   let columnScores = this.getColumnScores();
-  //   for (let i = 0 ; i < 25 ; i++) {
-  //     elements.push(this.renderCard(i));
-  //     if (i % 5 === 4) {
-  //       const rowInd = Math.floor(i / 5);
-  //       elements.push(<span align="center">{"  " + rowScores[rowInd]}</span>);
-  //       elements.push(<br/>);
-  //     }
-  //   }
-
-  //   for (let i = 0 ; i < 5 ; i++) {
-  //     elements.push(<span align="center">{"  " + columnScores[i] + "    "}</span>);
-  //   }
-
-  //   const grid = React.createElement("div", null, ...elements);
-  //   const nextCard = (<Card 
-  //                       rank={this.props.nextCard.rank}
-  //                       suit={this.props.nextCard.suit}
-  //                     />);
-  //   return React.createElement("div", null, [nextCard, <br/>, grid]);
-  // }
 }
 
 
@@ -209,6 +200,7 @@ class CribbageGame extends React.Component {
     super(props);
     const deck = makeDeck();
     shuffleDeck(deck);
+    console.log("deck length:", deck.length);
 
     // fill center card
     let cl = Array(25).fill({rank: null, suit: null});
@@ -218,6 +210,21 @@ class CribbageGame extends React.Component {
       deck: deck.slice(1, deck.length), 
       cardLayout: cl
     };
+  }
+
+  resetGame() {
+    const deck = makeDeck();
+    shuffleDeck(deck);
+    console.log("deck length:", deck.length);
+
+    // fill center card
+    let cl = Array(25).fill({rank: null, suit: null});
+    cl[12] = deck[0];
+
+    this.setState({
+      deck: deck.slice(1, deck.length), 
+      cardLayout: cl
+    });
   }
 
   handleGridClick(i) {
@@ -237,16 +244,66 @@ class CribbageGame extends React.Component {
 
 
   render() {
-    const currentCard = this.state.deck[0];
+    let currentCard;
+    console.log(this.state.deck.length);
+    if (this.state.deck.length > 27) {
+      currentCard = this.state.deck[0];
+    }
+    else {
+      currentCard = null;
+    }
     return (
       <div>
         <CardGrid
           nextCard={currentCard}
           cardLayout={this.state.cardLayout}
           clickHandler={(i) => this.handleGridClick(i)}
+          resetCallback={(r,c) => {this.resetGame(); this.props.resetCallback(r,c)}}
         />
       </div>
     );
+  }
+}
+
+class MultiRoundCribbageGame extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      rowScoreboard: 0,
+      colScoreboard: 0,
+    }
+  }
+
+  updateScore(rScore, cScore) {
+    let msg;
+    if (rScore > cScore) {
+      rScore = rScore - cScore;
+      cScore = 0;
+      msg = "Row Wins: " + rScore + " points";;
+    }
+    else if (cScore > rScore) {
+      cScore = cScore - rScore;
+      rScore = 0;
+      msg = "Col Wins: " + cScore + " points";
+    }
+    else { //tie
+      msg = "Tie!";
+      cScore = 0;
+      rScore = 0;
+    }
+
+    alert(msg);
+    this.setState({rowScoreboard: this.state.rowScoreboard+rScore,
+                   colScoreboard: this.state.colScoreboard+cScore});
+  }
+
+
+  render() {
+    const scoreString = "Row: " + this.state.rowScoreboard + "    Column: " + this.state.colScoreboard;
+    return (<div>
+              <h1>{scoreString}</h1>
+              <CribbageGame resetCallback={(r, c) => this.updateScore(r, c)} />
+            </div>);
   }
 }
 
@@ -255,7 +312,7 @@ class CribbageGame extends React.Component {
 // ========================================
 
 ReactDOM.render(
-  <CribbageGame />,
+  <MultiRoundCribbageGame />,
   document.getElementById('root')
 );
 
