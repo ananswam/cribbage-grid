@@ -78,7 +78,6 @@ function shuffleDeck(array) {
 }
 
 
-
 class CardGrid extends React.Component {
   renderCard(i) {
     return (
@@ -90,31 +89,45 @@ class CardGrid extends React.Component {
     );
   }
 
-  getRowScores() {
+  getLineScores(indices, maxes, step) {
     var scores = Array();
-    for (const row of [0, 5, 10, 15, 20]) {
+    for (let ind = 0 ; ind < 5 ; ind++) {
+
+      let startIndex = indices[ind];
+      let maxIndex = maxes[ind];
       // get non null cards in row.
-      let rowCards = Array();
-      for(let i = row; i < row + 5; i++) {
+      let lineCards = Array();
+      for(let i = startIndex; i < maxIndex; i += step) {
         if (this.props.cardLayout[i].rank) {
-          rowCards.push(this.props.cardLayout[i]);
+          lineCards.push(this.props.cardLayout[i]);
         }
       }
       // Get score for them.
       let score = 0;
-      if (rowCards.length > 1) {
-        score = scoreHand(rowCards);
+      if (lineCards.length > 1) {
+        score = scoreHand(lineCards);
       }
       scores.push(score);
     }
     return scores;
   }
 
+  getRowScores() {
+    return this.getLineScores([0, 5, 10, 15, 20],
+                              [5, 10, 15, 20, 25], 
+                              1);
+  }
 
+  getColumnScores() {
+    return this.getLineScores([0, 1, 2, 3, 4],
+                              [25, 25, 25, 25, 25], 
+                              5);
+  }
 
   render() {
     let elements = Array();
     let rowScores = this.getRowScores();
+    let columnScores = this.getColumnScores();
     for (let i = 0 ; i < 25 ; i++) {
       elements.push(this.renderCard(i));
       if (i % 5 === 4) {
@@ -122,12 +135,11 @@ class CardGrid extends React.Component {
         elements.push(<span align="center">{"  " + rowScores[rowInd]}</span>);
         elements.push(<br/>);
       }
-      // if (i % 5 === 4) {
-      //   const rowInd = i / 5;
-      //   elements.push(<h1>{rowScores[rowInd]}</h1>);
-      // }
     }
-    //console.log(this.getRowScores());
+
+    for (let i = 0 ; i < 5 ; i++) {
+      elements.push(<span align="center">{"  " + columnScores[i] + "    "}</span>);
+    }
 
     return React.createElement("div", null, ...elements);
   }
