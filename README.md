@@ -1,3 +1,8 @@
+# Playing Card Images
+
+Playing card images are in the public domain and available here: https://tekeye.uk/playing_cards/svg-playing-cards
+Published by dan@tekeye.uk
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
