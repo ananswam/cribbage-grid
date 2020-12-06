@@ -27,6 +27,13 @@ Having all 5 cards of the same suit is worth 5 points.
 ### Runs
 Having a run of cards (consecutive in rank) of length at least 3 is worth points equal to the length of the run. Ace here is low, and can only go with A23. AKQ is not allowed. For example 23456 has a run of length 5 for 5 points. 23445 has two runs of length 4 (depending on which 4 is used), so it has 8 points of runs. 33455 can 4 possible runs of length 3 (using either 3 and either 5), so it has 12 points of runs.
 
+### Examples
+
+AA44J: This hand has 2 pairs for 4 points, and four 15s for 8 points (4 possible combinations of A4J), so is worth a total of 12 points.
+44566: This hand has 2 pairs for 4 points, 4 runs of length 3 (versions of 456 using either 4 and 6) for 12 points, and 4 15s (4+5+6=15) for 8 points, for a total of 24 points.
+5555J: This hand has a four of a kind for 12 points, 4 15s that consist of 3 5s for 8 points, and 4 15s that consist of J5 for another 8 points, for a total of 28 points. This is the best hand in the game.
+
+To understand the scoring better, I recommend filling up the board randomly with cards and trying to count points, using the reported totals next to each row and column as a guide.
 
 # Playing Card Images
 
