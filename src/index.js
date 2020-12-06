@@ -200,9 +200,17 @@ class CardGrid extends React.Component {
 
 class CPUMoveButton extends React.Component {
   clickHandler() {
+    if (this.props.rowTurn) {
+      alert("It is your turn, not the CPU.\nMake a move.");
+      return;
+    }
+
     let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
     if (ans) {
       alert(`The CPU places in the following location:\nRow: ${1+ans[0]}\nCol: ${1+ans[1]}`);
+      // Convert back to normal index
+      const ind = ans[0]*5 + ans[1];
+      this.props.moveHandler(ind);
     }
     else {
       alert("There is no move left.\nThe round is over.\nClick the deck (astronaut) to start the next round.");
@@ -211,7 +219,7 @@ class CPUMoveButton extends React.Component {
   
   render() {
     return (<button onClick={this.clickHandler.bind(this)}>
-        {"Get Next CPU Move"}
+        {"Do Next CPU Move"}
     </button>);
   }
 }
@@ -227,9 +235,13 @@ class CribbageGame extends React.Component {
     let cl = Array(25).fill({rank: null, suit: null});
     cl[12] = deck[0];
 
+    // Check who should start.
+    let rowTurn = (Math.random() > 0.5);
+
     this.state = {
       deck: deck.slice(1, deck.length), 
-      cardLayout: cl
+      cardLayout: cl,
+      rowTurn: rowTurn
     };
   }
 
@@ -244,7 +256,8 @@ class CribbageGame extends React.Component {
 
     this.setState({
       deck: deck.slice(1, deck.length), 
-      cardLayout: cl
+      cardLayout: cl,
+      rowTurn: !this.state.rowTurn
     });
   }
 
@@ -259,22 +272,28 @@ class CribbageGame extends React.Component {
 
     this.setState({
       deck: newDeck,
-      cardLayout: newLayout
+      cardLayout: newLayout,
+      rowTurn: !(this.state.rowTurn)
     });
   }
 
 
   render() {
     let currentCard;
+    let turnText;
     //console.log(this.state.deck.length);
     if (this.state.deck.length > 27) {
       currentCard = this.state.deck[0];
+      turnText = this.state.rowTurn? "P1's Turn (rows)" : " P2/CPU's Turn (columns)";
     }
     else {
       currentCard = null;
+      turnText = "Round Over - click deck (astronaut) for next round";
     }
     return (
       <div>
+        <h3>{turnText}</h3>
+        <br/>
         <CardGrid
           nextCard={currentCard}
           cardLayout={this.state.cardLayout}
@@ -285,6 +304,8 @@ class CribbageGame extends React.Component {
         <CPUMoveButton
           nextCard={currentCard}
           cardLayout={this.state.cardLayout}
+          moveHandler={(i) => this.handleGridClick(i)}
+          rowTurn={this.state.rowTurn}
         />
       </div>
     );
