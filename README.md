@@ -1,3 +1,7 @@
+# Game
+
+This is a 5x5 grid version of the card game cribbage. Try it out [here!](https://ananswam.github.io/cribbage-grid)
+
 # Playing Card Images
 
 Playing card images are in the public domain and available here: https://tekeye.uk/playing_cards/svg-playing-cards
