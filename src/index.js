@@ -201,7 +201,12 @@ class CardGrid extends React.Component {
 class CPUMoveButton extends React.Component {
   clickHandler() {
     let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
-    alert(`Row: ${ans[0]}\nCol: ${ans[1]}`);
+    if (ans) {
+      alert(`The CPU places in the following location:\nRow: ${1+ans[0]}\nCol: ${1+ans[1]}`);
+    }
+    else {
+      alert("There is no move left.\nThe round is over.\nClick the deck (astronaut) to start the next round.");
+    }
   }
   
   render() {
@@ -300,12 +305,12 @@ class MultiRoundCribbageGame extends React.Component {
     if (rScore > cScore) {
       rScore = rScore - cScore;
       cScore = 0;
-      msg = "Row Wins: " + rScore + " points";;
+      msg = "P1 (Row) Wins: " + rScore + " points";;
     }
     else if (cScore > rScore) {
       cScore = cScore - rScore;
       rScore = 0;
-      msg = "Col Wins: " + cScore + " points";
+      msg = "P2/CPU (Col) Wins: " + cScore + " points";
     }
     else { //tie
       msg = "Tie!";
@@ -320,9 +325,11 @@ class MultiRoundCribbageGame extends React.Component {
 
 
   render() {
-    const scoreString = "Row: " + this.state.rowScoreboard + "    Column: " + this.state.colScoreboard;
+    const rowScoreString = "P1 Score (Row): " + this.state.rowScoreboard;
+    const colScoreString = "P2/CPU Score (Col): " + this.state.colScoreboard;
     return (<div>
-              <h1>{scoreString}</h1>
+              <h2>{rowScoreString}</h2>
+              <h2>{colScoreString}</h2>
               <CribbageGame resetCallback={(r, c) => this.updateScore(r, c)} />
             </div>);
   }
@@ -576,6 +583,9 @@ function getNextMove(cardLayout, nextCard) {
     }
   }
   // return index to place next card at by choosing one of the max indices randomly.
+  if (maxScoreIndices.length === 0) {
+    return null;
+  }
   let indexToReturn = Math.floor(Math.random() * maxScoreIndices.length);
   console.log(`Best Count: ${maxScoreIndices.length}, Chose: ${indexToReturn}`);
   return maxScoreIndices[indexToReturn];
