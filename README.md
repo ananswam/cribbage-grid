@@ -2,6 +2,32 @@
 
 This is a 5x5 grid version of the card game cribbage. Try it out [here!](https://ananswam.github.io/cribbage-grid)
 
+## Rules
+
+You are P1 and the CPU is P2. You take turns placing the next card in the deck (shown at the top left) onto the 5x5 grid, by simply clicking on the space that you would like to place the card into. On the CPU's turn, you can click the button at the bottom to do the next CPU move, which will make it your turn again.
+
+Each round of the game consists of filling up the 5x5 grid with cards. At the end of the round, whoever has more points gets the difference added to their total points at the top, while the loser gets zero. Another round then begins.
+
+Scoring is as follows. You, the row player, get points for the hands made up of each row of the grid. This is done according to standard cribbage rules. The CPU opponent gets points for each column of the grid. These hand totals are shown next to each row and column as the game progresses, and the large bold numbers show the totals for all rows (bottom left) and for all columns (top right).
+
+## Cribbage Scoring
+
+### Pairs
+
+A pair of cards is worth 2 points (e.g. two kings). A three of a kind contains 3 pairs, and is thus worth 6 points. A 4 of a kind contains 6 pairs (4 choose 2) and is worth 12 points.
+
+### Fifteens
+
+Any combination of cards in your hand that adds up to 15 is worth 2 points (Ace = 1, JQK are 10 each). This makes the 5 very valuable because a lot of cards are worth 10. For example, a hand with A445J would have 3 fifteens: A4J, A4J with the other 4, and 5J. A hand of 66993 would have 5 fifteens: 4 possible versions of 69, and 663.
+
+### Flush
+
+Having all 5 cards of the same suit is worth 5 points.
+
+### Runs
+Having a run of cards (consecutive in rank) of length at least 3 is worth points equal to the length of the run. Ace here is low, and can only go with A23. AKQ is not allowed. For example 23456 has a run of length 5 for 5 points. 23445 has two runs of length 4 (depending on which 4 is used), so it has 8 points of runs. 33455 can 4 possible runs of length 3 (using either 3 and either 5), so it has 12 points of runs.
+
+
 # Playing Card Images
 
 Playing card images are in the public domain and available here: https://tekeye.uk/playing_cards/svg-playing-cards
