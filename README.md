@@ -12,6 +12,8 @@ Scoring is as follows. You, the row player, get points for the hands made up of 
 
 ## Cribbage Scoring
 
+Hands can score points in different ways. The total points for a hand is equal to the sum of the points that it scores for pairs, fifteens, runs, and flush.
+
 ### Pairs
 
 A pair of cards is worth 2 points (e.g. two kings). A three of a kind contains 3 pairs, and is thus worth 6 points. A 4 of a kind contains 6 pairs (4 choose 2) and is worth 12 points.
@@ -25,6 +27,7 @@ Any combination of cards in your hand that adds up to 15 is worth 2 points (Ace 
 Having all 5 cards of the same suit is worth 5 points.
 
 ### Runs
+
 Having a run of cards (consecutive in rank) of length at least 3 is worth points equal to the length of the run. Ace here is low, and can only go with A23. AKQ is not allowed. For example 23456 has a run of length 5 for 5 points. 23445 has two runs of length 4 (depending on which 4 is used), so it has 8 points of runs. 33455 can 4 possible runs of length 3 (using either 3 and either 5), so it has 12 points of runs.
 
 ### Examples
