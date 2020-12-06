@@ -163,8 +163,8 @@ class CardGrid extends React.Component {
     topRowElements.push(<td>
                           <span
                             align="center"
-                            style={{'font-weight': 'bold',
-                                    'font-size': 24}}
+                            style={{fontWeight: 'bold',
+                                    fontSize: 24}}
                           >
                             {columnScoreTotal}
                           </span>
@@ -186,14 +186,14 @@ class CardGrid extends React.Component {
     wholeRows.push(<tr><td>
       <span
         align="center"
-        style={{'font-weight': 'bold',
-                'font-size': 24}}
+        style={{fontWeight: 'bold',
+                fontSize: 24}}
       >
         {rowScoreTotal}
       </span>
     </td></tr>);
 
-    return React.createElement("table", null, ...wholeRows);
+    return <table>{React.createElement("tbody", null, ...wholeRows)}</table>;
   }
 }
 
