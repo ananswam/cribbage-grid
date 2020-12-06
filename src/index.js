@@ -9,6 +9,7 @@ class Deck extends React.Component {
               src={src}
               onClick={() => this.props.clickHandler()}
               width="50px"
+              alt=""
             />;
   }
 }
@@ -37,12 +38,14 @@ class Card extends React.Component {
                 src={location}
                 width="50px"
                 onClick={() => this.props.clickHandler()}
+                alt=""
               />;
     }
     else {
       return <img
                 src={location}
                 width="50px"
+                alt=""
               />;
     }
   }
@@ -52,7 +55,7 @@ function makeDeck() {
   const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
   const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
                   'jack', 'queen', 'king', 'ace'];
-  let ans = Array();
+  let ans = [];
   for (const s of suits) {
     for (const r of ranks) {
       ans.push( {rank: r, suit: s});
@@ -93,13 +96,13 @@ class CardGrid extends React.Component {
   }
 
   getLineScores(indices, maxes, step) {
-    var scores = Array();
+    var scores = [];
     for (let ind = 0 ; ind < 5 ; ind++) {
 
       let startIndex = indices[ind];
       let maxIndex = maxes[ind];
       // get non null cards in row.
-      let lineCards = Array();
+      let lineCards = [];
       for(let i = startIndex; i < maxIndex; i += step) {
         if (this.props.cardLayout[i].rank) {
           lineCards.push(this.props.cardLayout[i]);
@@ -135,8 +138,8 @@ class CardGrid extends React.Component {
     const rowScoreTotal = rowScores.reduce((x,y)=>x+y, 0);
 
 
-    let topRowElements = Array();
-    let wholeRows = Array();
+    let topRowElements = [];
+    let wholeRows = [];
     // first row is next card and then the column scores.
     if(this.props.nextCard) {
       topRowElements.push((<td>
@@ -171,7 +174,7 @@ class CardGrid extends React.Component {
 
     // for other rows, it is the card layout with row score in first column.
     for (let row = 0 ; row < 5; row++) {
-      let rowElements = Array();
+      let rowElements = [];
       rowElements.push(<td><span align="center">{rowScores[row]}</span></td>);
       for(let cardIndex = 0 ; cardIndex < 5; cardIndex++) {
         const ind = cardIndex + 5*row;
@@ -195,12 +198,25 @@ class CardGrid extends React.Component {
 }
 
 
+class CPUMoveButton extends React.Component {
+  clickHandler() {
+    let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
+    alert(`Row: ${ans[0]}\nCol: ${ans[1]}`);
+  }
+  
+  render() {
+    return (<button onClick={this.clickHandler.bind(this)}>
+        {"Get Next CPU Move"}
+    </button>);
+  }
+}
+
 class CribbageGame extends React.Component {
   constructor(props) {
     super(props);
     const deck = makeDeck();
     shuffleDeck(deck);
-    console.log("deck length:", deck.length);
+    //console.log("deck length:", deck.length);
 
     // fill center card
     let cl = Array(25).fill({rank: null, suit: null});
@@ -245,7 +261,7 @@ class CribbageGame extends React.Component {
 
   render() {
     let currentCard;
-    console.log(this.state.deck.length);
+    //console.log(this.state.deck.length);
     if (this.state.deck.length > 27) {
       currentCard = this.state.deck[0];
     }
@@ -259,6 +275,11 @@ class CribbageGame extends React.Component {
           cardLayout={this.state.cardLayout}
           clickHandler={(i) => this.handleGridClick(i)}
           resetCallback={(r,c) => {this.resetGame(); this.props.resetCallback(r,c)}}
+        />
+        <br/>
+        <CPUMoveButton
+          nextCard={currentCard}
+          cardLayout={this.state.cardLayout}
         />
       </div>
     );
@@ -357,7 +378,7 @@ function scorePairs(hand) {
   var score = 0;
   for (let i = 0 ; i < hand.length ; i++) {
     for (let j = i+1 ; j < hand.length ; j++) {
-      if (hand[i].rank == hand[j].rank) {
+      if (hand[i].rank === hand[j].rank) {
         score += 2;
       }
     }
@@ -369,10 +390,10 @@ function scoreFlush(hand) {
   if (hand.length < 5) {
     return 0;
   }
-  if(hand[0].suit == hand[1].suit && 
-    hand[0].suit == hand[2].suit &&
-    hand[0].suit == hand[3].suit &&
-    hand[0].suit == hand[4].suit) {
+  if(hand[0].suit === hand[1].suit && 
+    hand[0].suit === hand[2].suit &&
+    hand[0].suit === hand[3].suit &&
+    hand[0].suit === hand[4].suit) {
       return 5;
   }
   return 0;
@@ -393,7 +414,7 @@ function score15(hand) {
   for (const s of subsets) {
     if(s.length > 0) {
       const sumValue = s.reduce((a, b) => a+b, 0);
-      if (sumValue == 15) {
+      if (sumValue === 15) {
         score += 2;
       }
     }
@@ -418,10 +439,10 @@ function scoreRuns(hand) {
     const current = numbers[i], prev = numbers[i-1];
     const delta = current - prev;
     //console.log(i, duplicity, currentLength, multiple);
-    if (delta == 0) {
+    if (delta === 0) {
       duplicity += 1;
     }
-    else if (delta == 1) {
+    else if (delta === 1) {
       multiple *= duplicity;
       duplicity = 1;
       currentLength += 1;
@@ -448,4 +469,114 @@ function scoreHand(hand) {
   score += scoreRuns(hand);
 
   return score;
+}
+
+//=========================================================================
+//===========================CPU NEXT MOVE LOGIC===========================
+//=========================================================================
+
+// Load the required ratings JSON file.
+let cardRatings = require('./ratings.json');
+
+function convertLayoutToGrid(cardLayout) {
+  let ans = [];
+  for (let i = 0 ; i < 5 ; i++) {
+    let row = [];
+    for (let j = 0 ; j < 5 ; j++) {
+      row.push(cardLayout[i*5+j]);
+    }
+    ans.push(row);
+  }
+  return ans;
+}
+
+function getCardRatings(subset) {
+  let realCards = [];
+  for (const s of subset) {
+    if (s.rank && s.suit) {
+      realCards.push(s);
+    }
+  }
+
+  if (realCards.length === 5) {
+    return scoreHand(realCards);
+  }
+  else if (realCards.length === 0) {
+    return cardRatings["0"];
+  }
+  else {
+    // Convert to numbers and sort into ascending order.
+    let numbers = realCards.map((x) => convertRankToNumber(x.rank));
+    numbers.sort((a, b) => a - b);
+    // Convert to an ID.
+    let handId = 0;
+    for (const n of numbers) {
+      handId *= 14;
+      handId += n;
+    }
+    return cardRatings[String(handId)];
+  }
+}
+
+function getRowRating(array2d, rowInd) {
+  return getCardRatings(array2d[rowInd]);
+}
+
+function getColRating(array2d, colInd) {
+  let col = [];
+  for (let row = 0 ; row < array2d.length ; row++) {
+    col.push(array2d[row][colInd]);
+  }
+  return getCardRatings(col);
+}
+
+// eslint-disable-next-line
+function getNextMove(cardLayout, nextCard) {
+
+  let array2d = convertLayoutToGrid(cardLayout);
+
+  // iterate through array, trying to place the card at each null spot and get changed rating for row and col
+  // keeping track of "max" indices.
+  let maxScoreDiff = -Infinity;
+  let maxScoreIndices = [];
+
+  for (let row = 0 ; row < 5 ; row++) {
+    for (let col = 0 ; col < 5 ; col ++) {
+      // If spot filled, skip past it. Can't place here.
+      if (array2d[row][col].rank) {
+        continue;
+      }
+      
+      // check the value of placing the card at each position in the grid.
+      let baselineRowRating = getRowRating(array2d, row);
+      let baselineColRating = getColRating(array2d, col);
+
+      // place the card into this spot.
+      array2d[row][col] = nextCard;
+
+      // calculate new score
+      let newRowRating = getRowRating(array2d, row);
+      let newColRating = getColRating(array2d, col);
+      
+      // Put null card back in.
+      array2d[row][col] = {rank: null, suit: null};
+
+      // check score differential.
+      let scoreDiff = (newColRating - newRowRating) - (baselineColRating - baselineRowRating);
+      
+      console.log(`Checking: (${row}, ${col}). Diff: ${scoreDiff}`);
+
+      if(Math.abs(scoreDiff - maxScoreDiff) <= 1e-2) {
+        maxScoreIndices.push([row, col]);
+      }
+      else if (scoreDiff > maxScoreDiff) {
+        maxScoreIndices = [[row, col]];
+        maxScoreDiff = scoreDiff;
+      }
+    }
+  }
+  // return index to place next card at by choosing one of the max indices randomly.
+  let indexToReturn = Math.floor(Math.random() * maxScoreIndices.length);
+  console.log(`Best Count: ${maxScoreIndices.length}, Chose: ${indexToReturn}`);
+  return maxScoreIndices[indexToReturn];
 }
