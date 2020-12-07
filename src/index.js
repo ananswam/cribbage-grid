@@ -2,6 +2,8 @@ import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import Fade from '@material-ui/core/Fade';
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
 
 class Deck extends React.Component {
   render() {
@@ -233,7 +235,8 @@ class CribbageGame extends React.Component {
     this.state = {
       deck: deck.slice(1, deck.length), 
       cardLayout: cl,
-      rowTurn: rowTurn
+      rowTurn: rowTurn,
+      cpuEnabled: true
     };
   }
 
@@ -291,7 +294,7 @@ class CribbageGame extends React.Component {
     }
 
     // Do the CPU move in a bit if it's the CPU's turn.
-    if (this.state.rowTurn === false) {
+    if (this.state.rowTurn === false && this.state.cpuEnabled) {
       setTimeout(()=> this.cpuMoveHandler(this.state.cardLayout, currentCard), 3000);
     }
 
@@ -302,8 +305,17 @@ class CribbageGame extends React.Component {
         <CardGrid
           nextCard={currentCard}
           cardLayout={this.state.cardLayout}
-          clickHandler={(i) => {if (this.state.rowTurn) {this.handleGridClick(i)}}}
+          clickHandler={(i) => {if (this.state.rowTurn || !this.state.cpuEnabled) {this.handleGridClick(i)}}}
           resetCallback={(r,c) => {this.resetGame(); this.props.resetCallback(r,c)}}
+        />
+        <br />
+        <FormControlLabel
+      control={
+        <Switch checked={this.state.cpuEnabled}
+                onChange={() => this.setState({cpuEnabled: !this.state.cpuEnabled})}
+                name="cpuEnableSwitch" />
+      }
+      label="CPU Opponent"
         />
       </div>
     );
