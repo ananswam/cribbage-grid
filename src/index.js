@@ -200,21 +200,23 @@ class CardGrid extends React.Component {
 
 class CPUMoveButton extends React.Component {
   clickHandler() {
-    if (this.props.rowTurn) {
+    let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
+
+    if (ans === null) {
+      alert("There is no move left.\nThe round is over.\nClick the deck (astronaut) to start the next round.");
+    }
+
+    else if (this.props.rowTurn) {
       alert("It is your turn, not the CPU.\nMake a move.");
       return;
     }
 
-    let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
-    if (ans) {
-      alert(`The CPU places in the following location:\nRow: ${1+ans[0]}\nCol: ${1+ans[1]}`);
+    else {
       // Convert back to normal index
       const ind = ans[0]*5 + ans[1];
       this.props.moveHandler(ind);
     }
-    else {
-      alert("There is no move left.\nThe round is over.\nClick the deck (astronaut) to start the next round.");
-    }
+
   }
   
   render() {
