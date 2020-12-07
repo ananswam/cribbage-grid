@@ -1,6 +1,7 @@
-import React from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import Fade from '@material-ui/core/Fade';
 
 class Deck extends React.Component {
   render() {
@@ -19,36 +20,55 @@ function convertCardToUrl(rank, suit) {
 }
 
 
-class Card extends React.Component {
-  render() {
-    let location;
-    if (this.props.showBack) {
-      location = "cards/astronaut.svg";
-    }
-    else if (this.props.rank && this.props.suit) {
-      location = convertCardToUrl(this.props.rank, this.props.suit);
-      
-    }
-    else {
-      location = "cards/blank_card.svg";
-    }
 
-    if (this.props.clickHandler) {
-      return <img
-                src={location}
-                width="50px"
-                onClick={() => this.props.clickHandler()}
-                alt=""
-              />;
-    }
-    else {
-      return <img
-                src={location}
-                width="50px"
-                alt=""
-              />;
-    }
+function Card(props) {
+  let location;
+  if (props.showBack) {
+    location = "cards/astronaut.svg";
   }
+  else if (props.rank && props.suit) {
+    location = convertCardToUrl(props.rank, props.suit);
+    
+  }
+  else {
+    location = "cards/blank_card.svg";
+  }
+
+  let imgTag;
+  if (props.clickHandler) {
+    imgTag = <img
+              src={location}
+              width="50px"
+              onClick={() => props.clickHandler()}
+              alt=""
+            />;
+  }
+  else {
+    imgTag = <img
+              src={location}
+              width="50px"
+              alt=""
+            />;
+  }
+  return <div {...props}>{imgTag}</div>;
+}
+
+function FadeCard(props) {
+  var [comeIn, setComeIn] = useState(true);
+  var [oldRank, setOldRank] = useState(null);
+  var [oldSuit, setOldSuit] = useState(null);
+
+  if ((oldRank !== props.rank || oldSuit !== props.suit) && comeIn) {
+    setComeIn(false);
+    setOldRank(props.rank);
+    setOldSuit(props.suit);
+    setTimeout(() => {setComeIn(true)}, 100);
+  }
+  console.log(comeIn, oldRank, oldSuit, props.rank, props.suit);
+
+  return (<Fade in={comeIn} timeout={comeIn? 1500: 0}>
+      <Card {...props}/>
+    </Fade>);
 }
 
 function makeDeck() {
@@ -87,7 +107,7 @@ function shuffleDeck(array) {
 class CardGrid extends React.Component {
   renderCard(i) {
     return (
-      <Card
+      <FadeCard
         rank={this.props.cardLayout[i].rank}
         suit={this.props.cardLayout[i].suit}
         clickHandler={() => this.props.clickHandler(i)}
@@ -197,48 +217,18 @@ class CardGrid extends React.Component {
   }
 }
 
-
-class CPUMoveButton extends React.Component {
-  clickHandler() {
-    let ans = getNextMove(this.props.cardLayout, this.props.nextCard);
-
-    if (ans === null) {
-      alert("There is no move left.\nThe round is over.\nClick the deck (astronaut) to start the next round.");
-    }
-
-    else if (this.props.rowTurn) {
-      alert("It is your turn, not the CPU.\nMake a move.");
-      return;
-    }
-
-    else {
-      // Convert back to normal index
-      const ind = ans[0]*5 + ans[1];
-      this.props.moveHandler(ind);
-    }
-
-  }
-  
-  render() {
-    return (<button onClick={this.clickHandler.bind(this)}>
-        {"Do Next CPU Move"}
-    </button>);
-  }
-}
-
 class CribbageGame extends React.Component {
   constructor(props) {
     super(props);
     const deck = makeDeck();
     shuffleDeck(deck);
-    //console.log("deck length:", deck.length);
 
     // fill center card
     let cl = Array(25).fill({rank: null, suit: null});
     cl[12] = deck[0];
 
     // Check who should start.
-    let rowTurn = (Math.random() > 0.5);
+    let rowTurn = true;
 
     this.state = {
       deck: deck.slice(1, deck.length), 
@@ -250,7 +240,6 @@ class CribbageGame extends React.Component {
   resetGame() {
     const deck = makeDeck();
     shuffleDeck(deck);
-    console.log("deck length:", deck.length);
 
     // fill center card
     let cl = Array(25).fill({rank: null, suit: null});
@@ -279,11 +268,19 @@ class CribbageGame extends React.Component {
     });
   }
 
+  cpuMoveHandler(cardLayout, nextCard) {
+    console.log(cardLayout, nextCard);
+    let ans = getNextMove(cardLayout, nextCard);
+    const ind = ans? ans[0]*5 + ans[1]: null;
+    if (ind !== null) {
+      this.handleGridClick(ind);
+    }
+  }
 
   render() {
     let currentCard;
     let turnText;
-    //console.log(this.state.deck.length);
+
     if (this.state.deck.length > 27) {
       currentCard = this.state.deck[0];
       turnText = this.state.rowTurn? "P1's Turn (rows)" : " P2/CPU's Turn (columns)";
@@ -292,6 +289,12 @@ class CribbageGame extends React.Component {
       currentCard = null;
       turnText = "Round Over - click deck (astronaut) for next round";
     }
+
+    // Do the CPU move in a bit if it's the CPU's turn.
+    if (this.state.rowTurn === false) {
+      setTimeout(()=> this.cpuMoveHandler(this.state.cardLayout, currentCard), 3000);
+    }
+
     return (
       <div>
         <h3>{turnText}</h3>
@@ -299,15 +302,8 @@ class CribbageGame extends React.Component {
         <CardGrid
           nextCard={currentCard}
           cardLayout={this.state.cardLayout}
-          clickHandler={(i) => this.handleGridClick(i)}
+          clickHandler={(i) => {if (this.state.rowTurn) {this.handleGridClick(i)}}}
           resetCallback={(r,c) => {this.resetGame(); this.props.resetCallback(r,c)}}
-        />
-        <br/>
-        <CPUMoveButton
-          nextCard={currentCard}
-          cardLayout={this.state.cardLayout}
-          moveHandler={(i) => this.handleGridClick(i)}
-          rowTurn={this.state.rowTurn}
         />
       </div>
     );
