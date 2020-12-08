@@ -68,7 +68,6 @@ function FadeCard(props) {
     setOldSuit(props.suit);
     setTimeout(() => {setComeIn(true)}, 100);
   }
-  console.log(comeIn, oldRank, oldSuit, props.rank, props.suit);
 
   return (<Fade in={comeIn} timeout={comeIn? 1500: 0}>
       <Card {...props}/>
@@ -244,17 +243,25 @@ class CribbageGame extends React.Component {
   }
 
   resetGame() {
-    const deck = makeDeck();
+    let deck = makeDeck();
     shuffleDeck(deck);
 
     // fill center card
     let cl = Array(25).fill({rank: null, suit: null});
     cl[12] = deck[0];
+    deck = deck.slice(1, deck.length);
+
+    const newRowTurn = !(this.state.rowTurn);
+
+    // call cpu here if it needs to make a move still.
+    if (!newRowTurn && this.state.cpuEnabled) {
+      setTimeout(()=> this.cpuMoveHandler(cl, deck[0]), 3000);
+    }
 
     this.setState({
-      deck: deck.slice(1, deck.length), 
+      deck: deck, 
       cardLayout: cl,
-      rowTurn: !this.state.rowTurn
+      rowTurn: newRowTurn
     });
   }
 
@@ -266,16 +273,24 @@ class CribbageGame extends React.Component {
     const newLayout = this.state.cardLayout.slice()
     newLayout[i] = this.state.deck[0];
     const newDeck = this.state.deck.slice(1, this.state.deck.length);
+    const newRowTurn = !(this.state.rowTurn);
+
+    // call cpu here if it needs to make a move still.
+    if (newDeck.length > 27 && !newRowTurn && this.state.cpuEnabled) {
+      setTimeout(()=> this.cpuMoveHandler(newLayout, newDeck[0]), 3000);
+    }
 
     this.setState({
       deck: newDeck,
       cardLayout: newLayout,
-      rowTurn: !(this.state.rowTurn)
+      rowTurn: newRowTurn
     });
   }
 
   cpuMoveHandler(cardLayout, nextCard) {
-    console.log(cardLayout, nextCard);
+    if (nextCard === null) {
+      console.log(this.state);
+    }
     let ans = getNextMove(cardLayout, nextCard, this.state.cpuLevel);
     if (ans !== null) {
       this.handleGridClick(ans);
@@ -293,11 +308,6 @@ class CribbageGame extends React.Component {
     else {
       currentCard = null;
       turnText = "Round Over - click deck (astronaut) for next round";
-    }
-
-    // Do the CPU move in a bit if it's the CPU's turn.
-    if (this.state.rowTurn === false && this.state.cpuEnabled) {
-      setTimeout(()=> this.cpuMoveHandler(this.state.cardLayout, currentCard), 3000);
     }
 
     return (
@@ -325,7 +335,7 @@ class CribbageGame extends React.Component {
             {"CPU Difficulty"}
           </Typography>
           <Slider
-            defaultValue={this.state.cpuLevel}
+            defaultValue={5}
             aria-labelledby="discrete-slider"
             valueLabelDisplay="auto"
             onChange={(e, v) => this.setState({cpuLevel: v})}
@@ -486,7 +496,6 @@ function scoreRuns(hand) {
   numbers.sort(function(a, b){return a-b});
   numbers.push(1000); // for the following loop to be easy.
 
-  //console.log(numbers);
 
   // Go through and see if we have runs.
   var score  = 0;
@@ -496,7 +505,6 @@ function scoreRuns(hand) {
   for (let i = 1 ; i < numbers.length ; i++) {
     const current = numbers[i], prev = numbers[i-1];
     const delta = current - prev;
-    //console.log(i, duplicity, currentLength, multiple);
     if (delta === 0) {
       duplicity += 1;
     }
@@ -656,11 +664,13 @@ function pickIndex(values) {
   return values.length-1;
 }
 
-function getNextMove(cardLayout, nextCard, alpha) {
+function getNextMove(cardLayout, nextCard, cpuLevel) {
   let [openIndices, netRatings] = getNextMoveRatings(cardLayout, nextCard);
   if (openIndices.length === 0) {
     return null;
   }
-  let softMaxRatings = softmax(netRatings, Math.max(0, alpha-1)*10/9);
+  let alpha = (cpuLevel === 10)? 10 : Math.max(cpuLevel-1, 0) / 2.5;
+  console.log(`Alpha : ${alpha}`);
+  let softMaxRatings = softmax(netRatings, alpha);
   return openIndices[pickIndex(softMaxRatings)];
 }
