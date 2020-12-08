@@ -4,6 +4,8 @@ import './index.css';
 import Fade from '@material-ui/core/Fade';
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
+import Typography from '@material-ui/core/Typography';
+import Slider from '@material-ui/core/Slider';
 
 class Deck extends React.Component {
   render() {
@@ -236,7 +238,8 @@ class CribbageGame extends React.Component {
       deck: deck.slice(1, deck.length), 
       cardLayout: cl,
       rowTurn: rowTurn,
-      cpuEnabled: true
+      cpuEnabled: true,
+      cpuLevel: 5
     };
   }
 
@@ -273,10 +276,9 @@ class CribbageGame extends React.Component {
 
   cpuMoveHandler(cardLayout, nextCard) {
     console.log(cardLayout, nextCard);
-    let ans = getNextMove(cardLayout, nextCard);
-    const ind = ans? ans[0]*5 + ans[1]: null;
-    if (ind !== null) {
-      this.handleGridClick(ind);
+    let ans = getNextMove(cardLayout, nextCard, this.state.cpuLevel);
+    if (ans !== null) {
+      this.handleGridClick(ans);
     }
   }
 
@@ -317,6 +319,24 @@ class CribbageGame extends React.Component {
       }
       label="CPU Opponent"
         />
+        <br />
+        <div style={{width: "200px"}}>
+          <Typography id="discrete-slider" gutterBottom>
+            {"CPU Difficulty"}
+          </Typography>
+          <Slider
+            defaultValue={this.state.cpuLevel}
+            aria-labelledby="discrete-slider"
+            valueLabelDisplay="auto"
+            onChange={(e, v) => this.setState({cpuLevel: v})}
+            step={1}
+            marks
+            min={1}
+            max={10}
+            disabled={!this.state.cpuEnabled}
+          />
+        </div>
+
       </div>
     );
   }
@@ -568,15 +588,13 @@ function getColRating(array2d, colInd) {
   return getCardRatings(col);
 }
 
-// eslint-disable-next-line
-function getNextMove(cardLayout, nextCard) {
+function getNextMoveRatings(cardLayout, nextCard) {
 
   let array2d = convertLayoutToGrid(cardLayout);
 
-  // iterate through array, trying to place the card at each null spot and get changed rating for row and col
-  // keeping track of "max" indices.
-  let maxScoreDiff = -Infinity;
-  let maxScoreIndices = [];
+  // Iterate through array tracking score and index at each spot.
+  let openIndices = [];
+  let netRatings = [];
 
   for (let row = 0 ; row < 5 ; row++) {
     for (let col = 0 ; col < 5 ; col ++) {
@@ -602,22 +620,47 @@ function getNextMove(cardLayout, nextCard) {
       // check score differential.
       let scoreDiff = (newColRating - newRowRating) - (baselineColRating - baselineRowRating);
       
-      console.log(`Checking: (${row}, ${col}). Diff: ${scoreDiff}`);
-
-      if(Math.abs(scoreDiff - maxScoreDiff) <= 1e-2) {
-        maxScoreIndices.push([row, col]);
-      }
-      else if (scoreDiff > maxScoreDiff) {
-        maxScoreIndices = [[row, col]];
-        maxScoreDiff = scoreDiff;
-      }
+      openIndices.push(row*5 + col);
+      netRatings.push(scoreDiff);
     }
   }
-  // return index to place next card at by choosing one of the max indices randomly.
-  if (maxScoreIndices.length === 0) {
+  return [openIndices, netRatings];
+}
+
+/** Weighted soft max of values, multiply by alpha first.
+ * 
+ * @param {Array[number]} values 
+ * @param {number} alpha 
+ */
+function softmax(values, alpha) {
+  let ans = values.map((x) => Math.exp(x*alpha));
+  let sum = ans.reduce((a,b) => a+b, 0);
+  return ans.map((x) => x/sum);
+}
+
+/** Return random index according to weights in values
+ * 
+ * @param {Array[number]} values Must be a prob distribution.
+ */
+function pickIndex(values) {
+  let i = 0, total=0;
+  const r = Math.random();
+
+  for (i = 0 ; i < values.length ; i++) {
+    total += values[i];
+    if (r < total) {
+      return i;
+    }
+  }
+  console.assert(false, "Should not reach here in weighted random sampling");
+  return values.length-1;
+}
+
+function getNextMove(cardLayout, nextCard, alpha) {
+  let [openIndices, netRatings] = getNextMoveRatings(cardLayout, nextCard);
+  if (openIndices.length === 0) {
     return null;
   }
-  let indexToReturn = Math.floor(Math.random() * maxScoreIndices.length);
-  console.log(`Best Count: ${maxScoreIndices.length}, Chose: ${indexToReturn}`);
-  return maxScoreIndices[indexToReturn];
+  let softMaxRatings = softmax(netRatings, Math.max(0, alpha-1)*10/9);
+  return openIndices[pickIndex(softMaxRatings)];
 }
