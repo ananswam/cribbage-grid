@@ -1,6 +1,8 @@
 # Game
 
-This is a 5x5 grid version of the card game cribbage. Try it out [here!](https://ananswam.github.io/cribbage-grid)
+This is a 5x5 grid version of the card game cribbage. Try it out.
+
+# [Play here!](https://ananswam.github.io/cribbage-grid)
 
 ## Rules
 
