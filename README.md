@@ -6,7 +6,7 @@ This is a 5x5 grid version of the card game cribbage. Try it out.
 
 ## Rules
 
-You are P1 and the CPU is P2. You take turns placing the next card in the deck (shown at the top left) onto the 5x5 grid, by simply clicking on the space that you would like to place the card into. On the CPU's turn, you can click the button at the bottom to do the next CPU move, which will make it your turn again.
+You are P1 and the CPU is P2. You take turns placing the next card in the deck (shown at the top left) onto the 5x5 grid, by simply clicking on the space that you would like to place the card into. The CPU will then move automatically, making it your move again. You can also disable the CPU and play against a friend sharing a device.
 
 Each round of the game consists of filling up the 5x5 grid with cards. At the end of the round, whoever has more points gets the difference added to their total points at the top, while the loser gets zero. Another round then begins.
 
@@ -41,6 +41,11 @@ AA44J: This hand has 2 pairs for 4 points, and four 15s for 8 points (4 possible
 5555J: This hand has a four of a kind for 12 points, 4 15s that consist of 3 5s for 8 points, and 4 15s that consist of J5 for another 8 points, for a total of 28 points. This is the best hand in the game.
 
 To understand the scoring better, I recommend filling up the board randomly with cards and trying to count points, using the reported totals next to each row and column as a guide.
+
+
+### CPU Levels
+
+The CPU can be formidable, at least in our experience. I recommend playing CPU level 2 or 3 at first and then progressing.
 
 # Playing Card Images
 
