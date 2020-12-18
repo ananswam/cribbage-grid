@@ -49,7 +49,15 @@ The CPU can be formidable, at least in our experience. I recommend playing CPU l
 
 # Playing Card Images
 
-Playing card images are in the public domain and available here: https://tekeye.uk/playing_cards/svg-playing-cards
+Playing card images are in the public domain and available here.
+
+Fronts:
+https://www.me.uk/cards/
+© Copyright 2018 Adrian Kennard
+Released under CC0 Public Domain licence.
+
+Blank and Astronaut Card Back:
+https://tekeye.uk/playing_cards/svg-playing-cards
 Published by dan@tekeye.uk
 
 # Getting Started with Create React App

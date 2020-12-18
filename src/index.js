@@ -19,8 +19,20 @@ class Deck extends React.Component {
   }
 }
 
+
+function rank2svgid(r) {
+  if (r.length === 1) {
+    return r;
+  }
+  else if (r === '10') {
+    return 'T';
+  }
+  return r.charAt(0).toUpperCase();
+}
+
 function convertCardToUrl(rank, suit) {
-  return "cards/" + suit + "_" + rank + ".svg";
+  const rank_id  = rank2svgid(rank);
+  return "cards/" + rank_id + suit.charAt(0).toUpperCase() + ".svg";
 }
 
 
